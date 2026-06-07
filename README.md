@@ -1,222 +1,218 @@
-# Vehicle Maintenance Scheduler API
+# Vehicle Maintenance Scheduler Microservice
 
-An optimized scheduling microservice built using Node.js, Express, Axios, and clean architecture principles. It determines the optimal subset of maintenance tasks for vehicle depots using the **0/1 Knapsack Dynamic Programming algorithm** to maximize total task impact without exceeding available mechanic hours.
+## Overview
 
----
+The Vehicle Maintenance Scheduler Microservice is designed to optimize daily vehicle maintenance planning for a logistics company. Each depot receives multiple maintenance requests, where every task has:
 
-## 1. System Architecture
+* **Duration** (mechanic-hours required)
+* **Impact Score** (operational importance)
 
-The application is structured following Clean Architecture principles to enforce a strict separation of concerns, decoupling controllers/routers, business logic (services), algorithm utilities, and external network requests:
+Given a limited number of mechanic-hours available at a depot, the system determines the optimal subset of maintenance tasks that maximizes the total operational impact while staying within the available maintenance budget.
 
-```
-                                      +------------------------------------+
-                                      |         HTTP Request (Postman)     |
-                                      +-----------------+------------------+
-                                                        |
-                                                        v
-                                      +-----------------+------------------+
-                                      |          scheduler.routes          |
-                                      +-----------------+------------------+
-                                                        |
-                                                        v
-                                      +-----------------+------------------+
-                                      |         scheduler.service          |
-                                      +-------+------------------+---------+
-                                              |                  |
-                       +----------------------+                  +-----------------------+
-                       v                                                                 v
-+----------------------+-------------+                                    +--------------+-------------+
-|        depot.service (Axios)        |                                    |    vehicle.service (Axios)  |
-+----------------------+-------------+                                    +--------------+-------------+
-                       |                                                                 |
-                       v                                                                 v
-+----------------------+-------------+                                    +--------------+-------------+
-|      External Depots Endpoint       |                                    |       External Tasks Endpoint|
-+------------------------------------+                                    +----------------------------+
-                                                        |
-                                                        v
-                                      +-----------------+------------------+
-                                      |          knapsack.js (DP)          |
-                                      +------------------------------------+
-```
-
-- **Routes (`/src/routes/`)**: Receives the incoming request, extracts parameter payloads, handles HTTP responses, and handles route validation.
-- **Services (`/src/services/`)**: Contains the core business orchestration and integrates external API fetching logic via Axios.
-- **Utils (`/src/utils/`)**: Contains mathematical or algorithmic helper modules (in this case, the Knapsack DP solver).
-- **Middleware (`/src/middleware/`)**: Houses interceptors for logging incoming requests and handling application errors globally.
+The solution uses the **0/1 Knapsack Dynamic Programming Algorithm** to efficiently compute the best task schedule.
 
 ---
 
-## 2. Directory Structure
+## Problem Statement
 
-```
+Given:
+
+* A list of maintenance tasks
+* Task duration (hours)
+* Task impact score
+* Depot mechanic-hour budget
+
+Determine:
+
+* The optimal set of tasks to perform
+* Maximum achievable impact score
+* Tasks selected within the available mechanic-hours
+
+---
+
+## Features
+
+* Fetch depot information from protected API
+* Fetch vehicle maintenance tasks from protected API
+* Dynamic Programming based optimization
+* RESTful API architecture
+* Modular service-based project structure
+* Environment-based configuration
+* Error handling and validation
+* Optimized task scheduling
+
+---
+
+## Project Structure
+
+```text
 vehicle_maintenance_scheduler/
+│
 ├── src/
-│   ├── middleware/
-│   │   ├── error.middleware.js       # Centralized exception logging and formatting
-│   │   └── logging.middleware.js     # Intercepts requests for audit shipping
 │   ├── routes/
-│   │   └── scheduler.routes.js       # Express routes for scheduling endpoints
 │   ├── services/
-│   │   ├── depot.service.js          # API service fetching depots with mock fallback
-│   │   ├── scheduler.service.js      # Orchestrator running optimization per depot
-│   │   └── vehicle.service.js        # API service fetching tasks with mock fallback
+│   │   ├── depot.service.js
+│   │   ├── vehicle.service.js
+│   │   └── scheduler.service.js
 │   ├── utils/
-│   │   └── knapsack.js               # 0/1 Knapsack Dynamic Programming algorithm
-│   ├── app.js                        # Configures Express app and registers middlewares
-│   └── server.js                     # Listens on PORT and handles server lifecycle
-├── .env                              # Environment variable settings
-├── package.json                      # NPM project metadata and dependencies
-└── README.md                         # Documentation
+│   │   └── knapsack.js
+│   └── app.js
+│
+├── server.js
+├── .env
+├── package.json
+└── README.md
+```
+
+## Technology Stack
+
+* Node.js
+* Express.js
+* Axios
+* dotenv
+* JavaScript (ES6)
+
+---
+
+## Algorithm Used
+
+### 0/1 Knapsack Algorithm
+
+Mapping:
+
+| Maintenance Scheduling | Knapsack Problem |
+| ---------------------- | ---------------- |
+| Duration               | Weight           |
+| Impact                 | Value            |
+| Mechanic Hours         | Capacity         |
+
+Objective:
+
+```text
+Maximize Total Impact
+Subject To:
+Total Duration ≤ Available Mechanic Hours
+```
+
+Time Complexity:
+
+```text
+O(N × Capacity)
+```
+
+Space Complexity:
+
+```text
+O(N × Capacity)
 ```
 
 ---
 
-## 3. Getting Started
+## API Flow
 
-### Prerequisites
-- Node.js (version 16 or higher)
-- NPM
+### Step 1
 
-### Installation
-1. Install dependencies from the `vehicle_maintenance_scheduler` directory:
-   ```bash
-   npm install
-   ```
-   *Note: This will automatically link the local `logging_middleware` package.*
+Fetch depot details:
 
-2. Set up the environment variables:
-   Create or edit the `.env` file in the root folder with the following variables:
-   ```env
-   PORT=3000
-   NODE_ENV=development
-   CLIENT_ID=your_client_id
-   CLIENT_SECRET=your_client_secret
-   ACCESS_TOKEN=your_access_token
-   DEPOTS_API_URL=https://api.mockservice.io/depots
-   TASKS_API_URL=https://api.mockservice.io/tasks
-   EVALUATION_AUTH_URL=https://api.mockservice.io/oauth/token
-   LOGGING_API_URL=https://api.mockservice.io/logs
-   USE_MOCK_FALLBACK=true
-   ```
+```http
+GET /evaluation-service/depots
+```
 
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-   Or run standard start:
-   ```bash
-   npm start
-   ```
+### Step 2
+
+Fetch vehicle maintenance tasks:
+
+```http
+GET /evaluation-service/vehicles
+```
+
+### Step 3
+
+Apply scheduling algorithm.
+
+### Step 4
+
+Return optimal maintenance plan.
 
 ---
 
-## 4. Postman Testing Instructions
+## Sample Response
 
-Import the following endpoint patterns into Postman to test the optimization scheduler.
-
-### A. Run Default Scheduler Optimization (Using Fetched API Data)
-- **URL**: `http://localhost:3000/api/scheduler/optimize`
-- **Method**: `GET`
-- **Headers**:
-  - `Accept: application/json`
-
-### B. Run Custom Scheduler Optimization (Using Payload Overrides)
-You can test the 0/1 Knapsack solver with explicit custom test values directly in the body request.
-- **URL**: `http://localhost:3000/api/scheduler/optimize`
-- **Method**: `POST`
-- **Headers**:
-  - `Content-Type: application/json`
-- **Body** (JSON):
-  ```json
-  {
-    "depots": [
-      { "ID": "DEPOT-A", "MechanicHours": 10 },
-      { "ID": "DEPOT-B", "MechanicHours": 5 }
-    ],
-    "tasks": [
-      { "TaskID": "T-1", "Duration": 3, "Impact": 30 },
-      { "TaskID": "T-2", "Duration": 4, "Impact": 50 },
-      { "TaskID": "T-3", "Duration": 5, "Impact": 60 },
-      { "TaskID": "T-4", "Duration": 2, "Impact": 20 }
-    ]
-  }
-  ```
-
----
-
-## 5. Expected API Responses
-
-### A. Success Response (POST /optimize with custom payload)
-**Status**: `200 OK`
 ```json
 {
-  "status": "success",
-  "data": {
-    "schedule": [
-      {
-        "depotID": "DEPOT-A",
-        "mechanicHoursLimit": 10,
-        "totalImpact": 110,
-        "totalDuration": 9,
-        "selectedTasks": [
-          { "TaskID": "T-2", "Duration": 4, "Impact": 50 },
-          { "TaskID": "T-3", "Duration": 5, "Impact": 60 }
-        ]
-      },
-      {
-        "depotID": "DEPOT-B",
-        "mechanicHoursLimit": 5,
-        "totalImpact": 50,
-        "totalDuration": 5,
-        "selectedTasks": [
-          { "TaskID": "T-1", "Duration": 3, "Impact": 30 },
-          { "TaskID": "T-4", "Duration": 2, "Impact": 20 }
-        ]
-      }
-    ],
-    "aggregatedMetrics": {
-      "totalDepotsProcessed": 2,
-      "totalImpactAcrossDepots": 160,
-      "totalDurationAcrossDepots": 14
+  "depotId": 1,
+  "mechanicHours": 60,
+  "totalImpact": 118,
+  "selectedTasks": [
+    {
+      "taskId": "abc123",
+      "duration": 5,
+      "impact": 10
     }
-  }
-}
-```
-
-### B. Validation or Route Not Found Response (404)
-**Status**: `404 Not Found`
-```json
-{
-  "status": "error",
-  "error": {
-    "message": "Resource not found: GET /api/scheduler/invalid-route",
-    "status": 404
-  }
-}
-```
-
-### C. Error Response (500)
-If the API endpoints fail and fallback is disabled, you will get:
-**Status**: `500 Internal Server Error`
-```json
-{
-  "status": "error",
-  "error": {
-    "message": "DEPOTS_API_URL is not configured and mock fallback is disabled.",
-    "status": 500
-  }
+  ]
 }
 ```
 
 ---
 
-## 6. Code Quality & Optimization Opportunities
+## Installation
 
-1. **Big-O Complexity**: 
-   - **Time Complexity**: $O(D \cdot N \cdot W)$, where $D$ is the number of depots, $N$ is the number of maintenance tasks, and $W$ is the maximum `MechanicHours` value. This is highly efficient for typical scheduling inputs.
-   - **Space Complexity**: $O(N \cdot W)$ per depot to maintain the dynamic programming table. Can be optimized to $O(W)$ if task reconstruction is not needed (or by storing only the previous row), but keeping it allows traceback to obtain the exact selected tasks list.
-2. **Axios Timeout & Resiliency**:
-   - Each endpoint request includes a `timeout` configuration of 5000ms, ensuring that slow downstream microservices do not tie up the event loop resources indefinitely.
-3. **Resilient Logging isolation**:
-   - The logging wrapper runs asynchronously and handles internal exceptions gracefully, guaranteeing that error audit logging failures never break primary application flows.
+Clone repository:
+
+```bash
+git clone <repository-url>
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Configure environment variables:
+
+```env
+CLIENT_ID=your_client_id
+CLIENT_SECRET=your_client_secret
+BASE_URL=http://4.224.186.213
+```
+
+Run application:
+
+```bash
+npm start
+```
+
+Development mode:
+
+```bash
+npm run dev
+```
+
+---
+
+## Design Decisions
+
+* Service-oriented architecture for maintainability
+* Dynamic Programming for optimal scheduling
+* Separation of routes, services, and utility modules
+* Environment variables for secure credential management
+* Reusable scheduling engine
+
+---
+
+## Future Improvements
+
+* Redis caching
+* Scheduling history persistence
+* Multi-depot parallel processing
+* Performance monitoring
+* Dashboard visualization
+
+---
+
+## Author
+
+Keerthi L
+
+Backend Assessment Submission
