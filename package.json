@@ -1,0 +1,10 @@
+{
+  "name": "vehicle-maintenance-scheduler-root",
+  "version": "1.0.0",
+  "description": "Root workspace directory for Vehicle Maintenance Scheduler and Logging Middleware",
+  "scripts": {
+    "install-all": "npm install --prefix logging_middleware && npm install --prefix vehicle_maintenance_scheduler",
+    "start": "npm start --prefix vehicle_maintenance_scheduler",
+    "dev": "npm run dev --prefix vehicle_maintenance_scheduler"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "vehicle-maintenance-scheduler",
+  "version": "1.0.0",
+  "description": "Vehicle Maintenance Scheduler API with 0/1 Knapsack optimization and logging integration",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "logging-middleware": "file:../logging_middleware"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

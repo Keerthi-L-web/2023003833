@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vehicle Maintenance Scheduler - API Tester</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 20px; }
+    h1 { text-align: center; color: #00d4ff; margin-bottom: 20px; font-size: 22px; }
+    .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .panel { background: #16213e; border: 1px solid #0f3460; border-radius: 10px; padding: 20px; }
+    .panel h2 { color: #e94560; margin-bottom: 15px; font-size: 16px; }
+    label { display: block; color: #a0a0c0; font-size: 13px; margin-bottom: 5px; }
+    .method-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-right: 8px; }
+    .method-get { background: #61affe; color: #fff; }
+    .method-post { background: #49cc90; color: #fff; }
+    .url-bar { background: #0f3460; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; font-family: monospace; font-size: 13px; color: #00d4ff; display: flex; align-items: center; }
+    textarea { width: 100%; height: 180px; background: #0a0a23; color: #e0e0e0; border: 1px solid #0f3460; border-radius: 6px; padding: 10px; font-family: 'Consolas', monospace; font-size: 12px; resize: vertical; }
+    button { background: linear-gradient(135deg, #e94560, #0f3460); color: #fff; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 10px; transition: opacity 0.2s; }
+    button:hover { opacity: 0.85; }
+    .response-panel { margin-top: 15px; }
+    .response-panel pre { background: #0a0a23; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; border: 1px solid #0f3460; }
+    .meta { display: flex; gap: 15px; margin-bottom: 10px; }
+    .meta span { background: #0f3460; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+    .meta .status-ok { color: #49cc90; }
+    .meta .status-err { color: #e94560; }
+    .meta .time { color: #ffc107; }
+    .full-width { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+  <h1>🚗 Vehicle Maintenance Scheduler — API Test Console</h1>
+  <div class="container">
+
+    <!-- GET /health -->
+    <div class="panel">
+      <h2>1. Health Check</h2>
+      <div class="url-bar"><span class="method-badge method-get">GET</span> /health</div>
+      <button onclick="sendRequest('GET', '/health', null, 'res-health')">Send Request</button>
+      <div class="response-panel" id="res-health"></div>
+    </div>
+
+    <!-- GET /api/scheduler/optimize -->
+    <div class="panel">
+      <h2>2. Default Optimization (Mock Data)</h2>
+      <div class="url-bar"><span class="method-badge method-get">GET</span> /api/scheduler/optimize</div>
+      <button onclick="sendRequest('GET', '/api/scheduler/optimize', null, 'res-get-opt')">Send Request</button>
+      <div class="response-panel" id="res-get-opt"></div>
+    </div>
+
+    <!-- POST /api/scheduler/optimize -->
+    <div class="panel full-width">
+      <h2>3. Custom Optimization (POST with Body)</h2>
+      <div class="url-bar"><span class="method-badge method-post">POST</span> /api/scheduler/optimize</div>
+      <label>Request Body (JSON):</label>
+      <textarea id="post-body">{
+  "depots": [
+    { "ID": "DEPOT-A", "MechanicHours": 10 },
+    { "ID": "DEPOT-B", "MechanicHours": 5 }
+  ],
+  "tasks": [
+    { "TaskID": "T-1", "Duration": 3, "Impact": 30 },
+    { "TaskID": "T-2", "Duration": 4, "Impact": 50 },
+    { "TaskID": "T-3", "Duration": 5, "Impact": 60 },
+    { "TaskID": "T-4", "Duration": 2, "Impact": 20 }
+  ]
+}</textarea>
+      <button onclick="sendPost()">Send Request</button>
+      <div class="response-panel" id="res-post-opt"></div>
+    </div>
+
+  </div>
+
+  <script>
+    async function sendRequest(method, path, body, targetId) {
+      const container = document.getElementById(targetId);
+      container.innerHTML = '<p style="color:#a0a0c0;">Sending...</p>';
+      const start = performance.now();
+      try {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(path, opts);
+        const elapsed = (performance.now() - start).toFixed(0);
+        const data = await res.json();
+        container.innerHTML = `
+          <div class="meta">
+            <span class="${res.ok ? 'status-ok' : 'status-err'}">Status: ${res.status} ${res.statusText}</span>
+            <span class="time">⏱ ${elapsed} ms</span>
+          </div>
+          <pre>${JSON.stringify(data, null, 2)}</pre>`;
+      } catch (err) {
+        const elapsed = (performance.now() - start).toFixed(0);
+        container.innerHTML = `
+          <div class="meta"><span class="status-err">Error</span><span class="time">⏱ ${elapsed} ms</span></div>
+          <pre>${err.message}</pre>`;
+      }
+    }
+    function sendPost() {
+      try {
+        const body = JSON.parse(document.getElementById('post-body').value);
+        sendRequest('POST', '/api/scheduler/optimize', body, 'res-post-opt');
+      } catch (e) {
+        document.getElementById('res-post-opt').innerHTML = '<pre style="color:#e94560;">Invalid JSON in request body: ' + e.message + '</pre>';
+      }
+    }
+  </script>
+</body>
+</html>
